@@ -1,5 +1,0 @@
-limit = 4
-for (i = 0; i < limit; i = i + 1) {
-    print i
-}
-
