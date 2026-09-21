@@ -1,0 +1,16 @@
+for (i = 0; i < 3; i = i + 1) {
+    print i
+}
+
+count = 4
+for (k = count; k > 0; k = k - 1) {
+    print k
+}
+
+for (i = 10; i < 5; i = i + 1) {
+    print i
+}
+
+for (i = 7; i < 8; i = i + 1) {
+    print i
+}
