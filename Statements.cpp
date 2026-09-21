@@ -96,14 +96,6 @@ void ForStatement::evaluate(SymbolTable &symbolTable) const {
     }
 }
 
-// This displays the parsed loop, not the programs output
 void ForStatement::print() const {
-    std::cout << "for (" << std::endl;
-    initialization->print();
-    condition->print();
-    std::cout << std::endl;
-    update->print();
-    std::cout << ") {" << std::endl;
-    loopBody->print();
-    std::cout << "}" << std::endl;
+
 }
