@@ -117,11 +117,64 @@ Token Tokenizer::getToken() {
         char character;
         getCharacter(character);
 
+        // Only used to hold the second character of a two-character
+        // operator after we decide to take it out of the file.
+        char secondCharacter;
+
         if (isDigit(character)) {
             token.setIntegerValue(readInteger(character));
-        } else if (character == '=' || character == '+' || character == '-' ||
-                   character == '*' || character == '/' || character == '%' ||
-                   character == ';' || character == '(' || character == ')') {
+        
+        // Part 1:
+        // ADDED: '=' was moved out of the plain symbol list below, because it might really be the start of "=="
+        // peak() looks at the next character without removing it from the file
+
+        } else if (character == '=') {
+            if (inputStream.peek() == '=') {
+                getCharacter(secondCharacter);
+                token.setMultiCharSymbol("==");
+            } else {
+                token.setSymbol('=');
+            }
+
+        // Part 1:
+        // Added: '!' is only allowed when an '=' follows it
+        // A '!' by itself is not a valid token
+        } else if (character == '!') {
+            if (inputStream.peek() == '=') {
+                getCharacter(secondCharacter);
+                token.setMultiCharSymbol("!=");
+            } else {
+                std::cerr << "Unknown character in input at line " << token.lineNumber()
+                          << ", column " << token.columnNumber() << ": '"
+                          << character << "'.\n";
+                std::exit(EXIT_FAILURE);
+            }
+        
+        // Part 1:
+        // Added: '>' by itself, or ">=" when an '=' follows it
+        } else if (character == '>') {
+            if (inputStream.peek() == '=') {
+                getCharacter(secondCharacter);
+                token.setMultiCharSymbol(">=");
+            } else {
+                token.setSymbol('>');
+            }
+
+        // Part 1:
+        // Added: '<' by itself, or "<=" when an '=' follows it
+        } else if (character == '<') {
+            if (inputStream.peek() == '=') {
+                getCharacter(secondCharacter);
+                token.setMultiCharSymbol("<=");
+            } else {
+                token.setSymbol('<');
+            }
+        
+        //Part 1:
+        //Changed: '=' removed from this list, and '{' and '}' added.
+        } else if (character == '+' || character == '-' || character == '*' ||
+                   character == '/' || character == '%' || character == ';' ||
+                   character == '(' || character == ')' || character == '{' || character == '}') {
             token.setSymbol(character);
         } else if (isIdentifierStart(character)) {
             std::string identifier = readIdentifier(character);

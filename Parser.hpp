@@ -17,6 +17,14 @@ public:
     Statement *statement();
     AssignmentStatement *assignmentStatement();
 
+    // Part 3:
+    // added: a print statement (after doing expr.cpp and statements.cpp)
+    PrintStatement *printStatement(); 
+
+    // Part 4:
+    // Added
+    ForStatement *forStatement();
+
     ExprNode *relExpr();
     ExprNode *relTerm();
     ExprNode *relPrimary();

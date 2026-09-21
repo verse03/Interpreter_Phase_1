@@ -27,7 +27,18 @@ public:
     [[nodiscard]] std::size_t columnNumber() const { return _columnNumber; }
 
     void setSymbol(char symbol) { _symbol = symbol; }
+
+    // Part 1:
+    // Changed: takes a copy instead of a refernece, so we can call
+    // setMutliCharSymbol("==") with text written directly in the code
+    void setMultiCharSymbol(std::string multiCharSymbol) { _multiCharSymbol = std::move(multiCharSymbol); }
+
     [[nodiscard]] char symbol() const { return _symbol; }
+
+    // Part 1:
+    // Added: lets other code read the two-character symbol back out
+    // Token::print() needs this to show "==" , "!=" , ">=", "<=" 
+    [[nodiscard]] const std::string &multiCharSymbol() const { return _multiCharSymbol; }
 
     [[nodiscard]] bool isOpenParen() const { return _symbol == '('; }
     [[nodiscard]] bool isCloseParen() const { return _symbol == ')'; }
@@ -38,6 +49,18 @@ public:
     [[nodiscard]] bool isSubtractionOperator() const { return _symbol == '-'; }
     [[nodiscard]] bool isModuloOperator() const { return _symbol == '%'; }
     [[nodiscard]] bool isDivisionOperator() const { return _symbol == '/'; }
+
+    // Part 1:
+    // Added: the six relational operators
+    [[nodiscard]] bool isEqualityOperator() const { return _multiCharSymbol == "=="; }
+    [[nodiscard]] bool isNotEqualOperator() const { return _multiCharSymbol == "!="; }
+    [[nodiscard]] bool isGreaterThanOperator() const { return _symbol == '>'; }
+    [[nodiscard]] bool isGreaterThanOrEqualOperator() const { return _multiCharSymbol == ">="; }
+    [[nodiscard]] bool isLessThanOperator() const { return _symbol == '<'; }
+    [[nodiscard]] bool isLessThanOrEqualOperator() const { return _multiCharSymbol == "<="; }
+    [[nodiscard]] bool isOpenBracket() const { return _symbol == '{'; }
+    [[nodiscard]] bool isClosedBracket() const { return _symbol == '}'; }
+
 
     void setIdentifier(std::string identifier) { _identifier = std::move(identifier); }
     [[nodiscard]] bool isIdentifier() const { return !_identifier.empty(); }
@@ -65,6 +88,13 @@ private:
     bool _newline{false};
     bool _isInteger{false};
     char _symbol{'\0'};
+
+    // Part 1:
+    // Changed: starts as a truly empty string
+    // the old {'\0'} made a string holding one invisible character, so it 
+    // was not actually empty
+    std::string _multiCharSymbol{};
+
     int _integerValue{0};
     std::size_t _lineNumber{0};
     std::size_t _columnNumber{0};

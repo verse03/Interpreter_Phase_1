@@ -1,0 +1,6 @@
+a = -5
+b = +3
+print a + b
+print -a * 2
+print 17 % 5
+print (2 + 3) * 4

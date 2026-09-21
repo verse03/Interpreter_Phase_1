@@ -46,6 +46,41 @@ int BinaryExprNode::evaluate(const SymbolTable &symbolTable) const {
         return leftValue % rightValue;
     }
 
+    // Part 2:
+    // Added: the six relational operators
+    // A comparison that is true gives back the number 1, and a comparison that is false gives back the number 0.
+    if (token().isEqualityOperator()) {
+        if (leftValue == rightValue)
+        return 1;
+        return 0;
+    }
+    if (token().isNotEqualOperator()) {
+        if (leftValue != rightValue)
+        return 1;
+        return 0;
+    }
+    if (token().isGreaterThanOperator()) {
+        if (leftValue > rightValue)
+        return 1;
+        return 0;
+    }
+    if (token().isGreaterThanOrEqualOperator()) {
+        if (leftValue >= rightValue)
+        return 1;
+        return 0;
+    }
+    if (token().isLessThanOperator()) {
+        if (leftValue < rightValue)
+        return 1;
+        return 0;
+    }
+    if (token().isLessThanOrEqualOperator()) {
+        if (leftValue <= rightValue)
+        return 1;
+        return 0;
+    }
+
+
     throw std::logic_error("unsupported infix operator");
 }
 

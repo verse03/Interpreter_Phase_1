@@ -65,10 +65,27 @@ Statement *Parser::statement() {
         tokenizer.ungetToken();
         return assignmentStatement();
     }
-    if (token.isForKeyword())
-        die("Parser::statement", "for-statements are not implemented in the base interpreter", token);
-    if (token.isPrintKeyword())
-        die("Parser::statement", "print-statements are not implemented in the base interpreter", token);
+    
+    //Part 4:
+    // Changed: this used to die, now it hands off to forStatement()
+    // ungetToken() puts for back so forStatement() can read itself
+
+    // if (token.isForKeyword())
+    //    die("Parser::statement", "for-statements are not implemented in the base interpreter", token);
+
+    if (token.isForKeyword()) {
+        tokenizer.ungetToken();
+        return forStatement();
+    }
+
+    // Part 3:
+    // Changed: this used to die. Now it hands off to printStatement()
+    // ungetToken () puts print back so printStatement() can read itself
+    if (token.isPrintKeyword()) {
+        tokenizer.ungetToken();
+        return printStatement();
+    }
+        
 
     die("Parser::statement", "expected a statement", token);
 }
@@ -88,16 +105,117 @@ AssignmentStatement *Parser::assignmentStatement() {
     return new AssignmentStatement(variable.identifier(), relExpr());
 }
 
+// Part 3
+// Added: a print statement, built the same way as the assignment statement (after doing expr.cpp and statements.cpp)
+PrintStatement *Parser::printStatement() {
+
+    // <print-statement> -> print <rel-expr>
+    Token printKeyword = tokenizer.getToken();
+    if (!printKeyword.isPrintKeyword())
+        die("Parser::printStatement", "expected 'print'", printKeyword);
+
+    return new PrintStatement(relExpr());
+}
+
+    // ADDED (Part 4): reads each piece of the loop in order, left to right.
+ForStatement *Parser::forStatement() {
+    // for ( int a = 0; i < 10 ; i++ ) { statements }
+
+    // the word "for"
+    Token forKeyword = tokenizer.getToken();
+    if (!forKeyword.isForKeyword())
+        die("Parser::forStatement", "expected 'for'", forKeyword);
+
+    // (
+    Token openParen = tokenizer.getToken();
+    if (!openParen.isOpenParen())
+        die("Parser::forStatement", "expected '('", openParen);
+
+    // the start, e.g. i = 0
+    AssignmentStatement *initialization = assignmentStatement();
+
+    // first ;
+    Token firstSemicolon = tokenizer.getToken();
+    if (!firstSemicolon.isSemicolon())
+        die("Parser::forStatement", "expected ';'", firstSemicolon);
+
+    // the check, e.g. i < 4
+    ExprNode *condition = relExpr();
+
+    // second ;
+    Token secondSemicolon = tokenizer.getToken();
+    if (!secondSemicolon.isSemicolon())
+        die("Parser::forStatement", "expected ';'", secondSemicolon);
+
+    // the step, e.g. i = i + 1
+    AssignmentStatement *update = assignmentStatement();
+
+    // )
+    Token closeParen = tokenizer.getToken();
+    if (!closeParen.isCloseParen())
+        die("Parser::forStatement", "expected ')'", closeParen);
+
+    // {
+    Token openBrace = tokenizer.getToken();
+    if (!openBrace.isOpenBracket())
+        die("Parser::forStatement", "expected '{'", openBrace);
+
+    // the { must be followed by a NEWLINE
+    Token newline = tokenizer.getToken();
+    if (!newline.isNewline())
+        die("Parser::forStatement", "expected NEWLINE after '{'", newline);
+
+    // the lines inside { }. statements() needs at least one,
+    // so an empty loop body is rejected automatically.
+    Statements *loopBody = statements();
+
+    // }
+    Token closeBrace = tokenizer.getToken();
+    if (!closeBrace.isClosedBracket())
+        die("Parser::forStatement", "expected '}'", closeBrace);
+
+    return new ForStatement(initialization, condition, update, loopBody);
+}
+
+
 ExprNode *Parser::relExpr() {
     // <rel-expr> -> <rel-term> [ <equality-op> <rel-term> ]
     // The optional equality operation is left for students to implement.
-    return relTerm();
+
+    // Part 2:
+    // Added: the optional equality operation
+    ExprNode *left = relTerm();
+    Token token = tokenizer.getToken();
+
+    // Using "if" instead of "while" because the grammar allows AT MOST ONE
+    // equality opernator here. using while would wrongly accept "a == b == c" as valid, which is not allowed by the grammar.
+    if (token.isEqualityOperator() || token.isNotEqualOperator()) {
+        ExprNode *right = relTerm();
+        left = new BinaryExprNode(token, left, right);
+        return left;
+    }
+
+    tokenizer.ungetToken();
+    return left;
 }
 
 ExprNode *Parser::relTerm() {
     // <rel-term> -> <rel-primary> [ <ordering-op> <rel-primary> ]
     // The optional ordering operation is left for students to implement.
-    return relPrimary();
+
+    // Added: the optional ordering operation
+    ExprNode *left = relPrimary();
+    Token token = tokenizer.getToken();
+
+    // Using "if" instead of "while" because the grammar allows AT MOST ONE
+    if (token.isLessThanOperator() || token.isLessThanOrEqualOperator() ||
+        token.isGreaterThanOperator() || token.isGreaterThanOrEqualOperator()) {
+        ExprNode *right = relPrimary();
+        left = new BinaryExprNode(token, left, right);
+        return left;
+    }
+    tokenizer.ungetToken();
+    return left;
 }
 
 ExprNode *Parser::relPrimary() {
