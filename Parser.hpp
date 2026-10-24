@@ -25,6 +25,17 @@ public:
     // Added
     ForStatement *forStatement();
 
+    // Phase 2: Added the Suites --> reads indented lines under a loop
+    Statements *suite();
+
+    // Phase 2:
+    // Added: range ( <range-arguments> )
+    RangeExpression *rangeExpression();
+
+    // Phase 2:
+    // Added: 1, 2, or 3 expressions inside range( )
+    RangeExpression *rangeArguments();
+    
     ExprNode *relExpr();
     ExprNode *relTerm();
     ExprNode *relPrimary();

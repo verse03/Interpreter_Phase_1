@@ -9,7 +9,11 @@
 enum class Keyword {
     none,
     forKeyword,
-    printKeyword
+    printKeyword,
+
+    // Phase 2 - In and Range added
+    inKeyword,
+    rangeKeyword,
 };
 
 class Token {
@@ -23,19 +27,26 @@ public:
         _lineNumber = line;
         _columnNumber = column;
     }
+
+    // Phase 2 - Indent and Dedent added
+    [[nodiscard]] bool isIndent() const { return _indent; }
+    [[nodiscard]] bool isDedent() const { return _dedent; }
+    void markAsIndent() { _indent = true; }
+    void markAsDedent() { _dedent = true; }
+
     [[nodiscard]] std::size_t lineNumber() const { return _lineNumber; }
     [[nodiscard]] std::size_t columnNumber() const { return _columnNumber; }
 
     void setSymbol(char symbol) { _symbol = symbol; }
 
-    // Part 1:
+    // Phase 1 -Part 1:
     // Changed: takes a copy instead of a refernece, so we can call
     // setMutliCharSymbol("==") with text written directly in the code
     void setMultiCharSymbol(std::string multiCharSymbol) { _multiCharSymbol = std::move(multiCharSymbol); }
 
     [[nodiscard]] char symbol() const { return _symbol; }
 
-    // Part 1:
+    // Phase 1 -Part 1:
     // Added: lets other code read the two-character symbol back out
     // Token::print() needs this to show "==" , "!=" , ">=", "<=" 
     [[nodiscard]] const std::string &multiCharSymbol() const { return _multiCharSymbol; }
@@ -50,7 +61,7 @@ public:
     [[nodiscard]] bool isModuloOperator() const { return _symbol == '%'; }
     [[nodiscard]] bool isDivisionOperator() const { return _symbol == '/'; }
 
-    // Part 1:
+    // Phase 1 -Part 1:
     // Added: the six relational operators
     [[nodiscard]] bool isEqualityOperator() const { return _multiCharSymbol == "=="; }
     [[nodiscard]] bool isNotEqualOperator() const { return _multiCharSymbol == "!="; }
@@ -60,7 +71,10 @@ public:
     [[nodiscard]] bool isLessThanOrEqualOperator() const { return _multiCharSymbol == "<="; }
     [[nodiscard]] bool isOpenBracket() const { return _symbol == '{'; }
     [[nodiscard]] bool isClosedBracket() const { return _symbol == '}'; }
-
+ 
+    //Phase 2 - Colon and Comma added
+    [[nodiscard]] bool isColon() const { return _symbol == ':'; }
+    [[nodiscard]] bool isComma() const { return _symbol == ','; }
 
     void setIdentifier(std::string identifier) { _identifier = std::move(identifier); }
     [[nodiscard]] bool isIdentifier() const { return !_identifier.empty(); }
@@ -70,6 +84,11 @@ public:
     [[nodiscard]] bool isKeyword() const { return _keyword != Keyword::none; }
     [[nodiscard]] bool isForKeyword() const { return _keyword == Keyword::forKeyword; }
     [[nodiscard]] bool isPrintKeyword() const { return _keyword == Keyword::printKeyword; }
+
+    // Phase 2 - In and Range added
+    [[nodiscard]] bool isInKeyword() const { return _keyword == Keyword::inKeyword; }
+    [[nodiscard]] bool isRangeKeyword() const { return _keyword == Keyword::rangeKeyword; }
+
     [[nodiscard]] Keyword keyword() const { return _keyword; }
 
     void setIntegerValue(int value) {
@@ -89,7 +108,11 @@ private:
     bool _isInteger{false};
     char _symbol{'\0'};
 
-    // Part 1:
+    // Phase 2 - Indent and Dedent added
+    bool _indent{false};
+    bool _dedent{false};
+
+    // Phase 1 -Part 1:
     // Changed: starts as a truly empty string
     // the old {'\0'} made a string holding one invisible character, so it 
     // was not actually empty

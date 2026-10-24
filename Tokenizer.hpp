@@ -26,6 +26,15 @@ private:
     std::size_t columnNumber{1};
     bool lineContainsToken{false};
 
+    // Phase 2 - Stack of indent levels
+    std::vector<int> indentStack{0};
+
+    // Phase 2 - DEDENTs left to send
+    int pendingDedents{0};
+
+    // Phase 2 - Whether we are at the start of a line
+    bool atLineStart{true};
+
     bool getCharacter(char &character);
     std::string readIdentifier(char firstCharacter);
     int readInteger(char firstDigit);
@@ -34,6 +43,7 @@ private:
     static bool isIdentifierStart(char character);
     static bool isIdentifierPart(char character);
     static bool isDiscardedWhitespace(char character);
+
 };
 
 #endif // ALEXICALANALYZER_TOKENIZER_HPP

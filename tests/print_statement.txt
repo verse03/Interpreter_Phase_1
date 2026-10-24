@@ -1,0 +1,4 @@
+x = 42
+print 7
+print x
+print 1 + 2 == 3

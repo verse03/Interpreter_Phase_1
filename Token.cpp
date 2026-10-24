@@ -7,10 +7,24 @@ void Token::print(std::ostream &output) const {
         output << "NEWLINE";
     else if (isEof())
         output << "EOF";
+
+    // Phase 2 - Indent and Dedent added
+    else if (isIndent())
+        output << "INDENT";
+    else if (isDedent())
+        output << "DEDENT";
+
     else if (isForKeyword())
         output << "for";
     else if (isPrintKeyword())
         output << "print";
+
+    // Phase 2 - In and Range added
+    else if (isInKeyword())
+        output << "in";
+    else if (isRangeKeyword())
+        output << "range";
+
     else if (isOpenParen())
         output << '(';
     else if (isCloseParen())
@@ -34,7 +48,7 @@ void Token::print(std::ostream &output) const {
     else if (isInteger())
         output << integerValue();
 
-    // Part 1:
+    // Phase 1- Part 1:
     // ADDED: the new relational operators from the grammar.
     // The two-character ones are listed before the one-character ones
     // so ">=" is never printed as just ">".
@@ -51,13 +65,19 @@ void Token::print(std::ostream &output) const {
     else if (isLessThanOperator())
         output << " < ";
 
-    // Part 1:
+    // Phase 1- Part 1:
     // ADDED: the braces that wrap a for loop body.
     // Printed without spaces, to match how '(' and ')' are printed above.
     else if (isOpenBracket())
         output << '{';
     else if (isClosedBracket())
         output << '}';
+
+    // Phase 2 - Colon and Comma added
+    else if (isColon())
+        output << ':';
+    else if (isComma())
+        output << ',';
 
     else
         output << "uninitialized token";
