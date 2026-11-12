@@ -1,0 +1,5 @@
+print 42
+print 3.75
+print True
+print "plain text"
+print 'single quoted'

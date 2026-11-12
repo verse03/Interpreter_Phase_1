@@ -1,0 +1,12 @@
+a = 3
+b = 4.5
+c = 2
+total = a * c + b - 1
+print total
+avg = (a + c) / 2
+print avg
+name = "Total: "
+label = name + str(total)
+print label
+check = a * a + c * c == 13
+print check

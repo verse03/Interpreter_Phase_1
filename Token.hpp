@@ -2,6 +2,7 @@
 #define ALEXICALANALYZER_TOKEN_HPP
 
 #include <cstddef>
+#include <cstdint>
 #include <iosfwd>
 #include <string>
 #include <utility>
@@ -14,6 +15,11 @@ enum class Keyword {
     // Phase 2 - In and Range added
     inKeyword,
     rangeKeyword,
+
+    // Phase 3 - str, True, and False added
+    strKeyword,
+    trueKeyword,
+    falseKeyword,
 };
 
 class Token {
@@ -61,6 +67,9 @@ public:
     [[nodiscard]] bool isModuloOperator() const { return _symbol == '%'; }
     [[nodiscard]] bool isDivisionOperator() const { return _symbol == '/'; }
 
+    // Phase 3 - Floor division operator added
+    [[nodiscard]] bool isFloorDivisionOperator() const { return _multiCharSymbol == "//"; }
+
     // Phase 1 -Part 1:
     // Added: the six relational operators
     [[nodiscard]] bool isEqualityOperator() const { return _multiCharSymbol == "=="; }
@@ -89,14 +98,41 @@ public:
     [[nodiscard]] bool isInKeyword() const { return _keyword == Keyword::inKeyword; }
     [[nodiscard]] bool isRangeKeyword() const { return _keyword == Keyword::rangeKeyword; }
 
+    // Phase 3 - str, True, and False added
+    [[nodiscard]] bool isStrKeyword() const { return _keyword == Keyword::strKeyword; }
+    [[nodiscard]] bool isTrueKeyword() const { return _keyword == Keyword::trueKeyword; }
+    [[nodiscard]] bool isFalseKeyword() const { return _keyword == Keyword::falseKeyword; }
+
     [[nodiscard]] Keyword keyword() const { return _keyword; }
 
-    void setIntegerValue(int value) {
+    // Phase 3 - integers are now int64_t
+    void setIntegerValue(std::int64_t value) {
         _integerValue = value;
         _isInteger = true;
     }
+
+    // Phase 3 - Double and String literals added
+    void setDoubleValue(double value) {
+        _doubleValue = value;
+        _isDouble = true;
+    }
+
+    void setStringValue(std::string value) {
+        _stringValue = value;
+        _isString = true;
+    }
+
     [[nodiscard]] bool isInteger() const { return _isInteger; }
-    [[nodiscard]] int integerValue() const { return _integerValue; }
+
+    // Phase 3 - checks for the new literal types
+    [[nodiscard]] bool isString() const { return _isString; }
+    [[nodiscard]] bool isDouble() const { return _isDouble; }
+
+    [[nodiscard]] std::int64_t integerValue() const { return _integerValue; }
+
+    // Phase 3 - getters for the new literal values
+    [[nodiscard]] double doubleValue() const { return _doubleValue; }
+    [[nodiscard]] std::string stringValue() const { return _stringValue; }
 
     void print(std::ostream &output) const;
 
@@ -118,7 +154,15 @@ private:
     // was not actually empty
     std::string _multiCharSymbol{};
 
-    int _integerValue{0};
+    // Phase 3 - changed from int to int64_t
+    std::int64_t _integerValue{0};
+
+    // Phase 3 - flags and values for the new literal types
+    bool _isString{false};
+    bool _isDouble{false};
+    std::string _stringValue{};
+    double _doubleValue{0};
+
     std::size_t _lineNumber{0};
     std::size_t _columnNumber{0};
 };

@@ -1,0 +1,12 @@
+a = str(42)
+b = str(2.5)
+c = str(True)
+d = str(False)
+e = str("hello")
+f = str(-7)
+print a
+print b
+print c
+print d
+print e
+print f

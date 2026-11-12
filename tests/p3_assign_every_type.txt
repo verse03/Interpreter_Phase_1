@@ -1,0 +1,8 @@
+i = 7
+d = 2.5
+b = True
+s = "text"
+print i
+print d
+print b
+print s

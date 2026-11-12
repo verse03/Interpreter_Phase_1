@@ -1,0 +1,14 @@
+double = "hello"
+single = 'hello'
+emptyDouble = ""
+emptySingle = ''
+spaces = "hello   world"
+apostrophe = "don't"
+quoted = 'The title is "Interpreter Design"'
+print double
+print single
+print emptyDouble
+print emptySingle
+print spaces
+print apostrophe
+print quoted

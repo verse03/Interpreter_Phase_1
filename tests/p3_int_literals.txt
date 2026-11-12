@@ -1,0 +1,10 @@
+zero = 0
+small = 42
+medium = 1024
+biggest = 9223372036854775807
+smallest = -9223372036854775807
+print zero
+print small
+print medium
+print biggest
+print smallest

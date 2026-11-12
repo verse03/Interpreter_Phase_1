@@ -44,6 +44,12 @@ public:
     ExprNode *arithPrimary();
     ExprNode *arithAtom();
 
+    // Phase 3 - <literal> -> integer | double | boolean | string
+    ExprNode *literal();
+
+    // Phase 3 - <string-conversion> -> "str" ( <rel-expr> )
+    ExprNode *stringConversion();
+
 private:
     Tokenizer &tokenizer;
 

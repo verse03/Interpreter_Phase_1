@@ -1,0 +1,8 @@
+value = 10
+print value
+value = "ten"
+print value
+value = False
+print value
+value = 2.5
+print value

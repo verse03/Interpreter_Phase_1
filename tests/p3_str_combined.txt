@@ -1,0 +1,8 @@
+count = 12
+scale = 2.5
+done = False
+print "count = " + str(count)
+print "scale = " + str(scale)
+print "done = " + str(done)
+print "sum = " + str(count + scale)
+print "check = " + str(count > 10)

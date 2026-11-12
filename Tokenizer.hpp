@@ -2,6 +2,7 @@
 #define ALEXICALANALYZER_TOKENIZER_HPP
 
 #include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <iosfwd>
 #include <string>
@@ -37,7 +38,9 @@ private:
 
     bool getCharacter(char &character);
     std::string readIdentifier(char firstCharacter);
-    int readInteger(char firstDigit);
+
+    // Phase 3 - returns int64_t instead of int
+    std::int64_t readInteger(char firstDigit);
 
     static bool isDigit(char character);
     static bool isIdentifierStart(char character);

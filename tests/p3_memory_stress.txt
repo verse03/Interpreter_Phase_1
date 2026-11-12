@@ -1,0 +1,16 @@
+total = 0
+text = ""
+value = 0
+for i in range(50):
+    for j in range(20):
+        total = total + i * j
+        value = i / (j + 1)
+        value = str(value)
+        value = value == "1"
+        value = -i + 2.5
+    text = "row " + str(i) + " " + str(total)
+    flag = total % 7 == 0
+print total
+print text
+print flag
+print value

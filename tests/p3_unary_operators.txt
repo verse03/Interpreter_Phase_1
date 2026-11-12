@@ -1,0 +1,10 @@
+print -5
+print +5
+print -2.5
+print +2.5
+print -(-3)
+print -(4 - 10)
+x = 7
+print -x
+y = 1.5
+print -y

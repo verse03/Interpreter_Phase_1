@@ -1,5 +1,7 @@
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -33,6 +35,7 @@ AssignmentStatement::~AssignmentStatement() {
     delete expression;
 }
 
+// Phase 3 - evaluate() returns a new descriptor, and setValueFor takes ownership of it
 void AssignmentStatement::evaluate(SymbolTable &symbolTable) const {
     symbolTable.setValueFor(variableName, expression->evaluate(symbolTable));
 }
@@ -54,10 +57,13 @@ PrintStatement::~PrintStatement() {
     delete expression;
 }
 
-// running a print statement, work out the number then show it
+// running a print statement, work out the value then show it
 // followed by a newline
+// Phase 3 - prints the descriptor with toString(), then deletes it
 void PrintStatement::evaluate(SymbolTable &symbolTable) const {
-    std::cout << expression->evaluate(symbolTable) << std::endl;
+    ValueDescriptor *value = expression->evaluate(symbolTable);
+    std::cout << value->toString() << std::endl;
+    delete value;
 }
 
 // This displays the parsed program, not the programs output
@@ -83,11 +89,15 @@ void ForStatement::evaluate(SymbolTable &symbolTable) const {
 
     EvaluatedRange evalRange = range->evaluate(symbolTable);
 
-    int nextValue = evalRange.start();
+    // Phase 3 - int64_t to match IntegerValueDescriptor
+    std::int64_t nextValue = evalRange.start();
 
     if (evalRange.hasIteration()) {
         while (evalRange.shouldContinue(nextValue)) {
-            symbolTable.setValueFor(variable, nextValue);
+            // Phase 3 - the loop variable is a new integer descriptor each time
+            // (setValueFor deletes the previous one)
+            IntegerValueDescriptor *nextValueDescriptor = new IntegerValueDescriptor(nextValue);
+            symbolTable.setValueFor(variable, nextValueDescriptor);
             suite->evaluate(symbolTable);
             nextValue += evalRange.step();
         }
@@ -104,9 +114,10 @@ void ForStatement::print() const {
 
 // Phase 2:
 // Added: the EvaluatedRange functions
+// Phase 3 - changed int to int64_t
 
 // save the three numbers, but a step of 0 would loop forever, so stop here
-EvaluatedRange::EvaluatedRange(int start, int stop, int step)
+EvaluatedRange::EvaluatedRange(std::int64_t start, std::int64_t stop, std::int64_t step)
     : start_{start}, stop_{stop}, step_{step} {
     if (step_ == 0) {
         std::cerr << "EvaluatedRange: step must be non-zero.\n";
@@ -114,9 +125,9 @@ EvaluatedRange::EvaluatedRange(int start, int stop, int step)
     }
 }
 
-int EvaluatedRange::start() const { return start_; }
-int EvaluatedRange::stop() const { return stop_; }
-int EvaluatedRange::step() const { return step_; }
+std::int64_t EvaluatedRange::start() const { return start_; }
+std::int64_t EvaluatedRange::stop() const { return stop_; }
+std::int64_t EvaluatedRange::step() const { return step_; }
 
 // does the range have at least one value? just test the start value
 bool EvaluatedRange::hasIteration() const {
@@ -125,7 +136,7 @@ bool EvaluatedRange::hasIteration() const {
 
 // counting up (positive step): value must stay below stop
 // counting down (negative step): value must stay above stop
-bool EvaluatedRange::shouldContinue(int nextValue) const {
+bool EvaluatedRange::shouldContinue(std::int64_t nextValue) const {
     return (step_ > 0) ? (nextValue < stop_) : (nextValue > stop_);
 }
 
@@ -154,10 +165,52 @@ RangeExpression::~RangeExpression() {
 
 // turn the expressions into numbers, once, in the order written
 // missing start -> 0, missing step -> 1
+// Phase 3 - each argument must be an integer; delete each descriptor after reading it
 EvaluatedRange RangeExpression::evaluate(const SymbolTable &symbolTable) const {
-    const int start = startExpression ? startExpression->evaluate(symbolTable) : 0;
-    const int stop = stopExpression->evaluate(symbolTable);
-    const int step = stepExpression ? stepExpression->evaluate(symbolTable) : 1;
+    std::int64_t start = 0;
+    std::int64_t stop = 0;
+    std::int64_t step = 1;
+
+    if (startExpression != nullptr) {
+        ValueDescriptor *value = startExpression->evaluate(symbolTable);
+
+        if (value->type() != ValueDescriptor::Type::integer) {
+            std::string type = value->typeName();
+            delete value;
+            throw std::runtime_error("Type error: range start is " + type +
+                                     " at line " + std::to_string(startExpression->token().lineNumber()) +
+                                     ", column " + std::to_string(startExpression->token().columnNumber()));
+        }
+
+        start = static_cast<IntegerValueDescriptor *>(value)->value();
+        delete value;
+    }
+
+    ValueDescriptor *value = stopExpression->evaluate(symbolTable);
+    if (value->type() != ValueDescriptor::Type::integer) {
+        std::string type = value->typeName();
+        delete value;
+        throw std::runtime_error("Type error: range stop is " + type +
+                                 " at line " + std::to_string(stopExpression->token().lineNumber()) +
+                                 ", column " + std::to_string(stopExpression->token().columnNumber()));
+    }
+
+    stop = static_cast<IntegerValueDescriptor *>(value)->value();
+    delete value;
+
+    if (stepExpression != nullptr) {
+        ValueDescriptor *value = stepExpression->evaluate(symbolTable);
+        if (value->type() != ValueDescriptor::Type::integer) {
+            std::string type = value->typeName();
+            delete value;
+            throw std::runtime_error("Type error: range step is " + type +
+                                     " at line " + std::to_string(stepExpression->token().lineNumber()) +
+                                     ", column " + std::to_string(stepExpression->token().columnNumber()));
+        }
+        step = static_cast<IntegerValueDescriptor *>(value)->value();
+        delete value;
+    }
+
     return {start, stop, step};
 }
 

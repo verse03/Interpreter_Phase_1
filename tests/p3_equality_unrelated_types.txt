@@ -1,0 +1,7 @@
+print 4 == "four"
+print 4 != "four"
+print True == 1
+print True != 1
+print False == 0
+print "True" == True
+print 2.5 == "2.5"

@@ -1,0 +1,6 @@
+print "CS " + "460"
+first = "Sonoma"
+second = " State"
+print first + second
+print "" + "empty left"
+print "a" + "b" + "c"

@@ -1,4 +1,5 @@
 #include <cctype>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <limits>
@@ -47,17 +48,17 @@ std::string Tokenizer::readIdentifier(char firstCharacter) {
     return identifier;
 }
 
-int Tokenizer::readInteger(char firstDigit) {
-    int value = firstDigit - '0';
+// Phase 3 - uses int64_t and checks the int64 range before each digit is added
+std::int64_t Tokenizer::readInteger(char firstDigit) {
+    std::int64_t value = firstDigit - '0';
     while (inputStream.peek() != std::char_traits<char>::eof()) {
         char character = static_cast<char>(inputStream.peek());
         if (!isDigit(character))
             break;
 
         const int digit = character - '0';
-        if (value > (std::numeric_limits<int>::max() - digit) / 10) {
-            std::cerr << "Integer literal is too large at line " << lineNumber
-                      << ", column " << columnNumber << ".\n";
+        if (value > (std::numeric_limits<std::int64_t>::max() - digit) / 10) {
+            std::cerr << "Integer out of int64_t range at line " << lineNumber << ", column " << columnNumber << ".\n";
             std::exit(EXIT_FAILURE);
         }
 
@@ -196,8 +197,49 @@ Token Tokenizer::getToken() {
         // operator after we decide to take it out of the file.
         char secondCharacter;
 
+        // Phase 3 - integer, or a double if a '.' follows the digits
         if (isDigit(character)) {
-            token.setIntegerValue(readInteger(character));
+            std::int64_t numberValue = readInteger(character);
+
+            if (inputStream.peek() == '.') {
+                getCharacter(character);
+                std::string decimalDigits;
+
+                while (inputStream.peek() != std::char_traits<char>::eof()) {
+                    char nextCharacter = static_cast<char>(inputStream.peek());
+                    if (!isDigit(nextCharacter)) {
+                        break;
+                    }
+                    getCharacter(nextCharacter);
+                    decimalDigits += nextCharacter;
+                }
+
+                // Phase 3 - rejects "5." (needs digits after the point)
+                if (decimalDigits.empty()) {
+                    std::cerr << "Missing digits after '.' at line " << token.lineNumber() << ", column " << token.columnNumber() << ".\n";
+                    std::exit(EXIT_FAILURE);
+                }
+
+                std::string resultString = std::to_string(numberValue) + '.' + decimalDigits;
+                token.setDoubleValue(std::stod(resultString));
+            } else {
+                token.setIntegerValue(numberValue);
+            }
+
+            // Phase 3 - rejects "1.2e3" and "12abc" (a number can't run into a letter)
+            if (isIdentifierStart(static_cast<char>(inputStream.peek()))) {
+                std::cerr << "Invalid number at line " << token.lineNumber() << ", column " << token.columnNumber() << ".\n";
+                std::exit(EXIT_FAILURE);
+            }
+
+        // Phase 3 - '/' by itself, or "//" when another '/' follows it
+        } else if (character == '/') {
+            if (inputStream.peek() == '/') {
+                getCharacter(secondCharacter);
+                token.setMultiCharSymbol("//");
+            } else {
+                token.setSymbol('/');
+            }
         
         // Part 1:
         // ADDED: '=' was moved out of the plain symbol list below, because it might really be the start of "=="
@@ -248,11 +290,63 @@ Token Tokenizer::getToken() {
         //Part 1:
         //Changed: '=' removed from this list, and '{' and '}' added.
         //Phase 2: - added ':' and ',' 
+        //Phase 3: - '/' removed (now has its own branch for "//")
         } else if (character == '+' || character == '-' || character == '*' ||
-                   character == '/' || character == '%' || character == ';' ||
+                   character == '%' || character == ';' ||
                    character == '(' || character == ')' || character == '{' || 
                    character == '}' || character == ':' || character == ',') {
             token.setSymbol(character);
+
+        // Phase 3 - double-quoted string
+        } else if (character == '\"') {
+            std::string double_quoted_string;
+            while (inputStream.peek() != std::char_traits<char>::eof() && inputStream.peek() != '\n' &&
+                   inputStream.peek() != '\"') {
+
+                // Phase 3 - checks for invalid characters in strings
+                int nextValue = inputStream.peek();
+                if (nextValue < 32 || nextValue > 126 || nextValue == '\\') {
+                    std::cerr << "Unsupported character in string at line " << lineNumber << ", column " << columnNumber << ".\n";
+                    std::exit(EXIT_FAILURE);
+                }
+
+                getCharacter(character);
+                double_quoted_string += character;
+            }
+
+            // Phase 3 - string must close on the same line
+            if (inputStream.peek() == std::char_traits<char>::eof() || inputStream.peek() == '\n') {
+                std::cerr << "Missing closing quote at line " << token.lineNumber() << ", column " << token.columnNumber() << ".\n";
+                std::exit(EXIT_FAILURE);
+            }
+            getCharacter(character);
+            token.setStringValue(double_quoted_string);
+
+        // Phase 3 - single-quoted string
+        } else if (character == '\'') {
+            std::string single_quoted_string;
+            while (inputStream.peek() != std::char_traits<char>::eof() && inputStream.peek() != '\n' &&
+                   inputStream.peek() != '\'') {
+
+                // Phase 3 - checks for invalid characters in strings
+                int nextValue = inputStream.peek();
+                if (nextValue < 32 || nextValue > 126 || nextValue == '\\') {
+                    std::cerr << "Unsupported character in string at line " << lineNumber << ", column " << columnNumber << ".\n";
+                    std::exit(EXIT_FAILURE);
+                }
+
+                getCharacter(character);
+                single_quoted_string += character;
+            }
+
+            // Phase 3 - string must close on the same line
+            if (inputStream.peek() == std::char_traits<char>::eof() || inputStream.peek() == '\n') {
+                std::cerr << "Missing closing quote at line " << token.lineNumber() << ", column " << token.columnNumber() << ".\n";
+                std::exit(EXIT_FAILURE);
+            }
+            getCharacter(character);
+            token.setStringValue(single_quoted_string);
+
         } else if (isIdentifierStart(character)) {
             std::string identifier = readIdentifier(character);
             if (identifier == "for")
@@ -265,6 +359,14 @@ Token Tokenizer::getToken() {
                 token.setKeyword(Keyword::inKeyword);
             else if (identifier == "range")
                 token.setKeyword(Keyword::rangeKeyword);
+
+            // Phase 3: - added str, True, and False
+            else if (identifier == "str")
+                token.setKeyword(Keyword::strKeyword);
+            else if (identifier == "True")
+                token.setKeyword(Keyword::trueKeyword);
+            else if (identifier == "False")
+                token.setKeyword(Keyword::falseKeyword);
             
             else
                 token.setIdentifier(std::move(identifier));

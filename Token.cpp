@@ -25,6 +25,14 @@ void Token::print(std::ostream &output) const {
     else if (isRangeKeyword())
         output << "range";
 
+    // Phase 3 - True, False, and STR
+    else if (isTrueKeyword())
+        output << "True";
+    else if (isFalseKeyword())
+        output << "False";
+    else if (isStrKeyword())
+        output << "STR";
+
     else if (isOpenParen())
         output << '(';
     else if (isCloseParen())
@@ -39,6 +47,11 @@ void Token::print(std::ostream &output) const {
         output << " + ";
     else if (isSubtractionOperator())
         output << " - ";
+
+    // Phase 3 - Floor division operator added
+    else if (isFloorDivisionOperator())
+        output << " // ";
+
     else if (isModuloOperator())
         output << " % ";
     else if (isDivisionOperator())
@@ -47,6 +60,12 @@ void Token::print(std::ostream &output) const {
         output << identifier();
     else if (isInteger())
         output << integerValue();
+
+    // Phase 3 - Double and String literals added
+    else if (isDouble())
+        output << doubleValue();
+    else if (isString())
+        output << '"' << stringValue() << '"';
 
     // Phase 1- Part 1:
     // ADDED: the new relational operators from the grammar.

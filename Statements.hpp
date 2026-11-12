@@ -1,6 +1,7 @@
 #ifndef EXPRINTER_STATEMENTS_HPP
 #define EXPRINTER_STATEMENTS_HPP
 
+#include <cstdint>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -11,21 +12,22 @@
 // Phase 2:
 // Added: the range classes given by the professor.
 // EvaluatedRange holds the three real numbers (start, stop, step).
+// Phase 3 - changed int to int64_t to match IntegerValueDescriptor
 class EvaluatedRange {
 public:
-    EvaluatedRange(int start, int stop, int step);
+    EvaluatedRange(std::int64_t start, std::int64_t stop, std::int64_t step);
 
-    [[nodiscard]] int start() const;
-    [[nodiscard]] int stop() const;
-    [[nodiscard]] int step() const;
+    [[nodiscard]] std::int64_t start() const;
+    [[nodiscard]] std::int64_t stop() const;
+    [[nodiscard]] std::int64_t step() const;
 
     [[nodiscard]] bool hasIteration() const;
-    [[nodiscard]] bool shouldContinue(int nextValue) const;
+    [[nodiscard]] bool shouldContinue(std::int64_t nextValue) const;
 
 private:
-    int start_;
-    int stop_;
-    int step_;
+    std::int64_t start_;
+    std::int64_t stop_;
+    std::int64_t step_;
 };
 
 // Phase 2:

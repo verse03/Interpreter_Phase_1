@@ -289,9 +289,11 @@ ExprNode *Parser::arithTerm() {
     ExprNode *left = arithPrimary();
     Token token = tokenizer.getToken();
 
+    // Phase 3 - added // (floor division) to the mult-ops
     while (token.isMultiplicationOperator() ||
            token.isDivisionOperator() ||
-           token.isModuloOperator()) {
+           token.isModuloOperator() ||
+           token.isFloorDivisionOperator()) {
         ExprNode *right = arithPrimary();
         left = new BinaryExprNode(token, left, right);
         token = tokenizer.getToken();
@@ -312,13 +314,25 @@ ExprNode *Parser::arithPrimary() {
 }
 
 ExprNode *Parser::arithAtom() {
-    // <arith-atom> -> <id> | <integer> | '(' <rel-expr> ')'
+    // Phase 3 - Changed: <arith-atom> -> <id> | <literal> | <string-conversion> | '(' <rel-expr> ')'
     Token token = tokenizer.getToken();
 
-    if (token.isInteger())
-        return new IntegerLiteral(token);
     if (token.isIdentifier())
         return new Variable(token);
+
+    // Phase 3 - any literal: put the token back and let literal() read it
+    if (token.isInteger() || token.isDouble() || token.isString() ||
+        token.isTrueKeyword() || token.isFalseKeyword()) {
+        tokenizer.ungetToken();
+        return literal();
+    }
+
+    // Phase 3 - str( ... )
+    if (token.isStrKeyword()) {
+        tokenizer.ungetToken();
+        return stringConversion();
+    }
+
     if (token.isOpenParen()) {
         ExprNode *expression = relExpr();
         Token closeParen = tokenizer.getToken();
@@ -327,5 +341,49 @@ ExprNode *Parser::arithAtom() {
         return expression;
     }
 
-    die("Parser::arithAtom", "expected an identifier, integer, or '('", token);
+    die("Parser::arithAtom", "expected an identifier, literal, str conversion, or '('", token);
+}
+
+// Phase 3 - Added: <literal> -> <integer> | <double> | <boolean> | <string>
+ExprNode *Parser::literal() {
+    Token token = tokenizer.getToken();
+
+    if (token.isInteger())
+        return new IntegerLiteral(token);
+
+    if (token.isDouble())
+        return new DoubleLiteral(token);
+
+    if (token.isTrueKeyword() || token.isFalseKeyword())
+        return new BooleanLiteral(token);
+
+    if (token.isString())
+        return new StringLiteral(token);
+
+    die("Parser::literal", "expected a literal", token);
+}
+
+// Phase 3 - Added: <string-conversion> -> "str" ( <rel-expr> )
+ExprNode *Parser::stringConversion() {
+    // the word "str"
+    Token strToken = tokenizer.getToken();
+    if (!strToken.isStrKeyword())
+        die("Parser::stringConversion", "expected 'str'", strToken);
+
+    // (
+    Token openParen = tokenizer.getToken();
+    if (!openParen.isOpenParen())
+        die("Parser::stringConversion", "expected '('", openParen);
+
+    // the expression inside
+    ExprNode *expression = relExpr();
+
+    // )
+    Token closeParen = tokenizer.getToken();
+    if (!closeParen.isCloseParen()) {
+        delete expression;
+        die("Parser::stringConversion", "expected ')'", closeParen);
+    }
+
+    return new StringConversionExpression(strToken, expression);
 }

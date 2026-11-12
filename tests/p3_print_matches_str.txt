@@ -1,0 +1,13 @@
+values = 1.2500
+print values
+print str(values)
+big = 1234567.0
+print big
+print str(big)
+small = 0.00001
+print small
+print str(small)
+flag = 3 > 2
+print flag
+print str(flag)
+print str(values) == "1.25"

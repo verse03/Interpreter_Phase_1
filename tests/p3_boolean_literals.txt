@@ -1,0 +1,6 @@
+t = True
+f = False
+print t
+print f
+print True
+print False

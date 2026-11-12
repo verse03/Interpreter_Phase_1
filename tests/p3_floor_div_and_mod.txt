@@ -1,0 +1,13 @@
+print 7 // 2
+print 7 % 2
+print -5 // 2
+print -5 % 2
+print 5 // -2
+print 5 % -2
+print -5 // -2
+print -5 % -2
+print 6 // 3
+print 6 % 3
+a = -17
+b = 5
+print (a // b) * b + (a % b) == a
